@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Merchandising KPI Dashboard</title>
+<style>
+:root{--bg:#0b1120;--surface:#111a2e;--surface2:#162033;--border:#1c2b45;--border2:#263a5c;--text:#dce4ef;--text2:#8899b0;--text3:#5c6f8a;--accent:#4e8cff;--accent2:#3a6fd8;--green:#22c55e;--green-bg:rgba(34,197,94,.08);--green-bd:rgba(34,197,94,.25);--yellow:#eab308;--yellow-bg:rgba(234,179,8,.08);--yellow-bd:rgba(234,179,8,.25);--orange:#f97316;--orange-bg:rgba(249,115,22,.08);--orange-bd:rgba(249,115,22,.25);--red:#ef4444;--red-bg:rgba(239,68,68,.08);--red-bd:rgba(239,68,68,.25)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.4}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface)}
+.hdr h1{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.hdr h1 b{color:var(--accent);font-weight:800}
+.hdr-r{display:flex;gap:12px;align-items:center;font-size:12px;color:var(--text2)}
+.hdr-r .pill{background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:4px;font-size:11px}
+.wrap{max-width:1600px;margin:0 auto;padding:16px 24px}
+.period-bar{display:flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px;margin-bottom:12px;width:fit-content}
+.period-btn{padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);background:transparent;border:none;transition:background .15s}
+.period-btn:hover{color:var(--text);background:var(--surface2)}
+.period-btn.on{color:#fff;background:var(--accent)}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.sum-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:12px 14px;position:relative}
+.sum-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:4px 0 0 4px}
+.sum-card.g::before{background:var(--green)}.sum-card.y::before{background:var(--yellow)}.sum-card.o::before{background:var(--orange)}.sum-card.r::before{background:var(--red)}.sum-card.na::before{background:var(--text3)}
+.sum-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:4px}
+.sum-val{font-size:20px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.sum-sub{font-size:10px;color:var(--text2);margin-top:2px}
+.sum-tgt{font-size:10px;color:var(--text3);margin-top:2px}
+.toolbar{display:flex;gap:8px;margin-bottom:10px;align-items:center}
+.toolbar select,.toolbar input{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:5px 10px;color:var(--text);font-size:12px;outline:none}
+.toolbar select:focus,.toolbar input:focus{border-color:var(--accent)}
+.toolbar input{width:200px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:4px;background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{position:sticky;top:0;z-index:5;background:var(--surface2);padding:7px 8px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap}
+thead th:first-child,thead th:nth-child(2),thead th:nth-child(3){text-align:left;position:sticky;left:0;z-index:6;background:var(--surface2)}
+thead th:nth-child(2){left:120px}
+thead th:nth-child(3){left:220px}
+td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;white-space:nowrap}
+td:first-child,td:nth-child(2),td:nth-child(3){text-align:left;position:sticky;left:0;z-index:1;background:var(--surface)}
+td:nth-child(2){left:120px}
+td:nth-child(3){left:220px}
+tr:hover td{background:var(--surface2)}
+tr.miniso-row td{background:var(--surface2);font-weight:700;border-top:2px solid var(--accent);border-bottom:2px solid var(--accent)}
+tr.spoc-row td{background:rgba(78,140,255,.04);font-weight:600;border-bottom:1px solid var(--border2)}
+tr.non-trading td{opacity:.45;font-style:italic}
+.store-code{color:var(--text3);font-size:10px}
+.spoc-tag{color:var(--accent);font-size:10px;font-weight:600}
+.cell{display:inline-block;padding:1px 5px;border-radius:2px;font-weight:600;font-size:11px}
+.cell.g{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+.cell.y{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-bd)}
+.cell.o{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-bd)}
+.cell.r{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.cell.na{color:var(--text3)}
+.section{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);padding:8px 0 4px;border-bottom:1px solid var(--border);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <h1><b>MINISO</b> Merchandising KPI Dashboard</h1>
+  <div class="hdr-r">
+    <span class="pill" id="dataDate">—</span>
+    <span class="pill" id="storeCount">— stores</span>
+  </div>
+</div>
+<div class="wrap">
+  <div class="period-bar" id="periodBar">
+    <button class="period-btn on" data-mode="daily">Daily</button>
+    <button class="period-btn" data-mode="weekly">Weekly</button>
+    <button class="period-btn" data-mode="monthly">Monthly</button>
+  </div>
+  <div class="summary" id="summary"></div>
+  <div class="toolbar">
+    <select id="kpiSelect">
+      <option value="availability_a">A-Class Availability</option>
+      <option value="availability_b">B-Class Availability</option>
+      <option value="new_sku_availability">New SKU Availability</option>
+      <option value="moh">MOH (Months of Holding)</option>
+    </select>
+    <select id="spocFilter"><option value="">All SPOCs</option></select>
+    <select id="periodSelect"></select>
+    <input type="text" id="searchBox" placeholder="Search store...">
+  </div>
+  <div class="tbl-wrap">
+    <table><thead id="thead"></thead><tbody id="tbody"></tbody></table>
+  </div>
+</div>
+
+<script>
+let D=null, activeKPI="availability_a", activeMode="daily", activePeriod="d1";
+const KPI_ORDER=["availability_a","availability_b","new_sku_availability","moh"];
+const KPI_LABELS={availability_a:"A-Class",availability_b:"B-Class",new_sku_availability:"New SKU",moh:"MOH"};
+const PERIOD_COLS={daily:["d1","d2","d3","d4","d5","d6","d7"],weekly:["w1","w2","w3","w4"],monthly:["m1","m2","m3"]};
+const PERIOD_NAMES={d1:"D1",d2:"D2",d3:"D3",d4:"D4",d5:"D5",d6:"D6",d7:"D7",w1:"W1",w2:"W2",w3:"W3",w4:"W4",m1:"M1",m2:"M2",m3:"M3"};
+
+function cls_a(p){if(p==null)return"na";let v=p*100<=1?p*100:p;return v>94.99?"g":v>=87.99?"y":"o"}
+function cls_b(p){if(p==null)return"na";let v=p*100<=1?p*100:p;return v>87.99?"g":v>=74.99?"y":"o"}
+function cls_moh(a,t){if(a==null||t==null||!t)return"na";let v=(a-t)/t;return v>=-.1&&v<=.05?"g":(v>-.15&&v<-.1||v>.05&&v<.1)?"y":"r"}
+function fmtP(v){return v==null?"—":(v*100).toFixed(2)+"%"}
+function fmtM(v){return v==null?"—":v.toFixed(2)}
+function fmtPCell(v,clf){
+  if(v==null)return'<span class="cell na">—</span>';
+  let s=clf(v);
+  return'<span class="cell '+s+'">'+fmtP(v)+'</span>';
+}
+function fmtMCell(a,t){
+  if(a==null)return'<span class="cell na">—</span>';
+  let s=cls_moh(a,t);
+  if(a>50)return'<span class="cell na" title="No sales in period">— (no sales)</span>';
+  return'<span class="cell '+s+'">'+fmtM(a)+(t?' <span style="opacity:.6;font-size:10px">T:'+fmtM(t)+'</span>':'')+'</span>';
+}
+
+async function loadData(){
+  try{
+    const r=await fetch("dashboard_data.json?t="+Date.now());
+    D=await r.json();
+    document.getElementById("dataDate").textContent="Data: "+(D.data_freshness?.latest_stock_date||"—");
+    document.getElementById("storeCount").textContent=D.store_count+" stores";
+    buildSpocFilter();
+    buildPeriodSelect();
+    render();
+  }catch(e){
+    document.getElementById("tbody").innerHTML='<tr><td colspan="20" style="color:var(--red);text-align:center;padding:40px">Failed to load data: '+e.message+'</td></tr>';
+  }
+}
+
+function buildSpocFilter(){
+  const sel=document.getElementById("spocFilter");
+  const spocs=new Set();
+  for(const k of KPI_ORDER){(D.kpis[k].spocs||[]).forEach(s=>spocs.add(s.spoc_name))}
+  sel.innerHTML='<option value="">All SPOCs</option>';
+  [...spocs].sort().forEach(s=>{sel.innerHTML+='<option value="'+s+'">'+s+'</option>'});
+}
+
+function buildPeriodSelect(){
+  const sel=document.getElementById("periodSelect");
+  sel.innerHTML="";
+  const cols=PERIOD_COLS[activeMode];
+  cols.forEach(c=>{
+    const opt=document.createElement("option");
+    opt.value=c;
+    opt.textContent=PERIOD_NAMES[c];
+    if(c===activePeriod)opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+
+document.getElementById("periodBar").addEventListener("click",e=>{
+  const btn=e.target.closest(".period-btn");
+  if(!btn)return;
+  activeMode=btn.dataset.mode;
+  document.querySelectorAll(".period-btn").forEach(b=>b.classList.remove("on"));
+  btn.classList.add("on");
+  const cols=PERIOD_COLS[activeMode];
+  activePeriod=cols[0];
+  buildPeriodSelect();
+  render();
+});
+
+document.getElementById("kpiSelect").addEventListener("change",e=>{activeKPI=e.target.value;render()});
+document.getElementById("spocFilter").addEventListener("change",()=>render());
+document.getElementById("periodSelect").addEventListener("change",e=>{activePeriod=e.target.value;render()});
+document.getElementById("searchBox").addEventListener("input",()=>render());
+
+function getClf(kpi){
+  if(kpi==="availability_b")return cls_b;
+  if(kpi==="moh")return null;
+  return cls_a;
+}
+
+function render(){
+  if(!D)return;
+  const kpi=D.kpis[activeKPI];
+  if(!kpi)return;
+  const isMOH=activeKPI==="moh";
+  const clf=isMOH?null:getClf(activeKPI);
+  renderSummary(kpi,isMOH);
+  renderTable(kpi,isMOH);
+}
+
+function renderSummary(kpi,isMOH){
+  const el=document.getElementById("summary");
+  const m=kpi.miniso.metrics;
+  const periods=activeMode==="daily"?["d1","d2","d3","d4"]:activeMode==="weekly"?["w1","w2","w3","w4"]:["m1","m2","m3"];
+  const labels=activeMode==="daily"?["D1 (Yesterday)","D2","D3","D4"]:activeMode==="weekly"?["W1","W2","W3","W4"]:["M1","M2","M3"];
+
+  el.innerHTML=periods.map((p,i)=>{
+    let val,status,label=labels[i];
+    if(isMOH){
+      val=fmtM(m[p]);
+      status=kpi.miniso.status||"na";
+    }else{
+      val=fmtP(m[p]);
+      status=getClf(activeKPI)(m[p]);
+    }
+    let cls=status==="green"?"g":status==="yellow"?"y":status==="orange"?"o":status==="red"?"r":"na";
+    let extra="";
+    if(isMOH&&kpi.miniso.target!=null){
+      let variance=kpi.miniso.variance;
+      let varStr=variance!=null?(variance>=0?"+":"")+(variance*100).toFixed(1)+"% vs target":"";
+      extra='<div class="sum-tgt">Target: '+fmtM(kpi.miniso.target)+'</div>';
+      if(varStr)extra+='<div class="sum-tgt">'+varStr+'</div>';
+    }
+    return'<div class="sum-card '+cls+'"><div class="sum-lbl">'+label+'</div><div class="sum-val">'+val+'</div><div class="sum-sub"><span class="cell '+cls+'">'+status.toUpperCase()+'</span></div>'+extra+'</div>';
+  }).join("");
+}
+
+function renderTable(kpi,isMOH){
+  const cols=PERIOD_COLS[activeMode];
+  const search=document.getElementById("searchBox").value.toLowerCase();
+  const spocF=document.getElementById("spocFilter").value;
+  const clf=isMOH?null:getClf(activeKPI);
+
+  // Build header
+  const thead=document.getElementById("thead");
+  let hdr='<tr><th style="text-align:left;min-width:120px">Store</th><th style="text-align:left;min-width:100px">Code</th><th style="text-align:left;min-width:80px">SPOC</th>';
+  cols.forEach(c=>{hdr+='<th>'+PERIOD_NAMES[c]+'</th>'});
+  hdr+='<th style="text-align:left;min-width:60px">Status</th></tr>';
+  thead.innerHTML=hdr;
+
+  // Filter stores
+  let stores=kpi.stores||[];
+  if(spocF)stores=stores.filter(s=>s.spoc_name===spocF);
+  if(search)stores=stores.filter(s=>(s.store_name||"").toLowerCase().includes(search)||(s.store_code||"").toLowerCase().includes(search)||(s.spoc_name||"").toLowerCase().includes(search));
+
+  // Group by SPOC
+  const groups={};
+  stores.forEach(s=>{
+    const sp=s.spoc_name||"Unassigned";
+    if(!groups[sp])groups[sp]=[];
+    groups[sp].push(s);
+  });
+
+  // Build MINISO row
+  let minisoRow='<tr class="miniso-row"><td style="font-weight:800">MINISO TOTAL</td><td></td><td></td>';
+  cols.forEach(c=>{
+    if(isMOH){
+      minisoRow+='<td>'+fmtMCell(kpi.miniso.metrics[c],kpi.miniso.target)+'</td>';
+    }else{
+      minisoRow+='<td>'+fmtPCell(kpi.miniso.metrics[c],clf)+'</td>';
+    }
+  });
+  minisoRow+='<td><span class="cell '+(kpi.miniso.status==="green"?"g":kpi.miniso.status==="yellow"?"y":kpi.miniso.status==="orange"?"o":kpi.miniso.status==="red"?"r":"na")+'">'+kpi.miniso.status.toUpperCase()+'</span></td></tr>';
+
+  // Build rows
+  let rows=minisoRow;
+  Object.keys(groups).sort().forEach(sp=>{
+    const spStores=groups[sp];
+    // SPOC summary row
+    const spocData=kpi.spocs.find(s=>s.spoc_name===sp);
+    if(spocData){
+      rows+='<tr class="spoc-row"><td style="font-weight:700">'+sp+'</td><td class="store-code">'+spocData.store_count+' stores</td><td></td>';
+      cols.forEach(c=>{
+        if(isMOH){
+          rows+='<td>'+fmtMCell(spocData.metrics[c],spocData.target)+'</td>';
+        }else{
+          rows+='<td>'+fmtPCell(spocData.metrics[c],clf)+'</td>';
+        }
+      });
+      const sc=spocData.status==="green"?"g":spocData.status==="yellow"?"y":spocData.status==="orange"?"o":spocData.status==="red"?"r":"na";
+      rows+='<td><span class="cell '+sc+'">'+spocData.status.toUpperCase()+'</span></td></tr>';
+    }
+    // Store rows
+    spStores.forEach(s=>{
+      const rowCls=(isMOH&&s.non_trading)?' class="non-trading"':'';
+      rows+='<tr'+rowCls+'><td>'+s.store_name+'</td><td class="store-code">'+s.store_code+'</td><td class="spoc-tag">'+s.spoc_name+'</td>';
+      cols.forEach(c=>{
+        if(isMOH){
+          rows+='<td>'+fmtMCell(s.metrics[c],s.target)+'</td>';
+        }else{
+          rows+='<td>'+fmtPCell(s.metrics[c],clf)+'</td>';
+        }
+      });
+      const sc=s.status==="green"?"g":s.status==="yellow"?"y":s.status==="orange"?"o":s.status==="red"?"r":"na";
+      rows+='<td><span class="cell '+sc+'">'+s.status.toUpperCase()+'</span></td></tr>';
+    });
+  });
+
+  document.getElementById("tbody").innerHTML=rows;
+}
+
+loadData();
+</script>
+</body>
+</html>
